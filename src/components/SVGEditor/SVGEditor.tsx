@@ -1,18 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import '../scss/components/SVGEditor.scss';
-
-const getId = (id: string): string => {
-  return `svgeditor--${id}`;
-}
-
-const getClass = (className: string): string => {
-  return `svgeditor--${className}`;
-}
-
-type TActiveShape = {
-  index: number | null,
-  type: 'rect' | 'circle'
-};
+import React, { useEffect, useReducer, useState } from 'react';
+import { getId, getClass } from './functions';
+import Circle from './shapes/Circle';
+import Rect from './shapes/Rect';
+import { initState as activeShapeInitState, reducer as activeShapeReducer, EAction as EActiveShapeAction } from './reducers/ActiveShapeReducer';
+import { initState as activeDotInitState, reducer as activeDotReducer, EAction as EActiveDotAction } from './reducers/ActiveDot';
+import { reducer as shapesReducer, EAction as EShapesAction } from './reducers/ShapesReducer';
+import '../../scss/components/SVGEditor.scss';
+import { IObject } from '../../interfaces/MainInterfaces';
 
 type TActiveDot = {
   index: number | null,
@@ -22,10 +16,6 @@ type TActiveDot = {
 type TCoord = {
   x: number,
   y: number
-};
-
-interface IObject {
-  [key: string]: any
 };
 
 
@@ -39,12 +29,14 @@ type SVGEditorProps = {
 
 export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Element {
 
-  const [activeShape, setActiveShape] = useState<TActiveShape>({ index: null, type: 'rect' });
-  const [activeDot, setActiveDot] = useState<TActiveDot>({ index: null, moved: false });
-
+  const [activeShape, dispatchActiveShape] = useReducer(activeShapeReducer, activeShapeInitState);
+  const [activeDot, dispatchActiveDot] = useReducer(activeDotReducer, activeDotInitState);
+  const [shapes, dispatchShapes] = useReducer(shapesReducer, []);
   const [dots, setDots] = useState<TCoord[]>([]);
-  const [shapes, setShapes] = useState<IObject[]>([]);
 
+  /**
+   * Add, change or remove the active shape using the dots
+   */
   useEffect(() => {
     switch (activeShape.type) {
       case 'rect':
@@ -62,12 +54,14 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     }
   }, [dots]);
 
+  /**
+   * Adds a new dot to the canvas
+   * @param event 
+   */
   const handleCanvasClick = (event: React.MouseEvent<SVGElement>): void => {
     const { top, left } = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - left;
     const y = event.clientY - top;
-
-    console.log(x,y);
 
     switch (activeShape.type) {
       case 'rect':
@@ -78,6 +72,10 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     }
   }
 
+  /**
+   * Moves the active dot on the canvas
+   * @param event 
+   */
   const handleCanvasMouseMove = (event: React.MouseEvent<SVGElement>): void => {
     if (activeDot.index !== null) {
       console.log('ACTIVE DOT MOVE', activeDot);
@@ -85,52 +83,51 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       const x = event.clientX - left;
       const y = event.clientY - top;
 
-      changeDot(x, y);
+      moveActiveDot(x, y);
     }
   }
 
+  /**
+   * Adds or changes a shape on the canvas
+   * @param shape 
+   */
   const addOrChangeShape = (shape: IObject): void => {
     if (activeShape.index !== null) {
-      console.log('change shape', activeShape.index, shape);
-      const newShapes = shapes.slice();
-      newShapes[activeShape.index] = shape;
-      setShapes(newShapes);
+      dispatchShapes({ type: EShapesAction.CHANGE_SHAPE, index: activeShape.index, payload: shape });
     } else {
-      console.log('add shape', shapes.length, shape);
-      setActiveShape(oldActiveShape => ({...oldActiveShape, index: shapes.length}));
-      setShapes(oldShapes => [...oldShapes, shape]);
+      dispatchActiveShape({ type: EActiveShapeAction.CHOOSE, payload: shapes.length });
+      dispatchShapes({ type: EShapesAction.ADD_SHAPE, payload: shape });
     }
   }
 
+  /**
+   * Removes the active shape from the canvas
+   */
   const removeActiveShape = (): void => {
-    console.log('remove active shape', activeShape.index);
-    setShapes(shapes.filter((shape, index) => index !== activeShape.index));
-    setActiveShape(oldActiveShape => ({...oldActiveShape, index: null}));
+    if (activeShape.index !== null) {
+      dispatchShapes({ type: EShapesAction.REMOVE_SHAPE, index: activeShape.index });
+    }
+    dispatchActiveShape({ type: EActiveShapeAction.CHOOSE, payload: null });
   }
 
 
-  /// DOT METHODS
+  /// DOT METHOD
 
-  const handleDotClick = (event: React.MouseEvent<SVGCircleElement>): void => {
-    event.stopPropagation();
-
-    /*
-    const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
-    console.log(event.currentTarget, event.currentTarget.id, index);
-
-    removeDot(index);
-    */
-  }
-
+  /**
+   * Selects the active dot on the canvas
+   * @param event 
+   */
   const handleDotMouseDown = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
     const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
-    console.log('ACTIVE DOT START', index);
-
-    setActiveDot({ index, moved: false });
+    dispatchActiveDot({ type: EActiveDotAction.CHOOSE, payload: index });
   }
 
+  /**
+   * Deselects the active dot on the canvas
+   * @param event 
+   */
   const handleDotMouseUp = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
@@ -141,27 +138,39 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       if (!activeDot.moved) {
         removeDot(activeDot.index);
       }
-      setActiveDot({ index: null, moved: false });
+      dispatchActiveDot({ type: EActiveDotAction.INIT });
     }
-
-    
   }
 
+  /**
+   * Adds the given dot to the canvas
+   * @param x 
+   * @param y 
+   */
   const addDot = (x: number, y: number): void => {
     console.log('add dot', dots.length);
     setDots(oldDots => [...oldDots, { x, y }]);
   }
 
-  const changeDot = (x: number, y: number): void => {
+  /**
+   * Change the active dot on the canvas
+   * @param x 
+   * @param y 
+   */
+  const moveActiveDot = (x: number, y: number): void => {
     console.log('change dot', activeDot);
     if (activeDot.index !== null) {
       const newDots = dots.slice();
       newDots[activeDot.index] = { x, y };
       setDots(newDots);
-      setActiveDot(oldActiveDot => ({ ...oldActiveDot, moved: true }));
+      dispatchActiveDot({ type: EActiveDotAction.MOVE });
     }
   }
 
+  /**
+   * Removes the given dot from the canvas
+   * @param removeIndex
+   */
   const removeDot = (removeIndex: number): void => {
     console.log('remove dot', removeIndex);
     setDots(dots.filter((dot, index) => index !== removeIndex));
@@ -181,7 +190,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       x: dot.x,
       y: dot.y,
       r: 3,
-      handleClick: handleDotClick,
       handleMouseDown: handleDotMouseDown,
       handleMouseUp: handleDotMouseUp
     };
@@ -221,57 +229,3 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     </svg>
   );
 };
-
-
-
-
-
-/// SVG ELEMENT COMPONENTS
-
-type RectProps = {
-  id: string,
-  className: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number
-};
-
-function Rect({ id, className, x, y, width, height }: RectProps): JSX.Element {
-  return (
-    <rect 
-      id={id} className={getClass(className)} 
-      x={x} y={y} width={width} height={height}
-    />
-  );
-}
-
-
-
-type CircleProps = {
-  id: string,
-  className: string,
-  x: number,
-  y: number,
-  r: number,
-  handleClick: (event: React.MouseEvent<SVGCircleElement>) => void,
-  handleMouseDown?: (event: React.MouseEvent<SVGCircleElement>) => void,
-  handleMouseUp?: (event: React.MouseEvent<SVGCircleElement>) => void
-};
-
-/**
- * Draws a circle
- * @param
- * @returns 
- */
-function Circle({ id, className, x, y, r, handleClick, handleMouseDown, handleMouseUp }: CircleProps): JSX.Element {
-  return (
-    <circle 
-      id={id} className={getClass(className)} 
-      cx={x} cy={y} r={r} 
-      onClick={(event) => handleClick(event)}
-      onMouseDown={(event) => {if (handleMouseDown) handleMouseDown(event)}}
-      onMouseUp={(event) => {if (handleMouseUp) handleMouseUp(event)}}
-    />
-  );
-}

@@ -1,5 +1,5 @@
 import React from 'react';
-import SVGEditor from './components/SVGEditor';
+import SVGEditor from './components/SVGEditor/SVGEditor';
 
 function App() {
   return (
