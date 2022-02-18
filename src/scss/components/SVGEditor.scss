@@ -1,0 +1,17 @@
+@import '../variables';
+
+.svgeditor-- {
+  &canvas {
+    border: 1px solid $gray-ee;
+  }
+
+  &dot {
+    fill: $gray-ee;
+    stroke: $gray-70;
+    stroke-width: 1;
+  }
+
+  &shape {
+    fill: $gray-ee;
+  }
+}
