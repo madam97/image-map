@@ -6,12 +6,20 @@
   }
 
   &dot {
+    cursor: pointer;
     fill: $gray-ee;
     stroke: $gray-70;
     stroke-width: 1;
   }
 
   &shape {
+    cursor: pointer;
     fill: $gray-ee;
+
+    &.active {
+      cursor: default;
+      stroke: $gray-70;
+      stroke-width: 1;
+    }
   }
 }
