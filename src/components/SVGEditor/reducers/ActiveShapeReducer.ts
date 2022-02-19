@@ -16,7 +16,7 @@ type TAction = {
 export const initState: TState = { index: null, type: 'rect' };
 
 export function reducer(state: TState, action: TAction): TState {
-  console.log(action);
+  console.log('ActiveShapeReducer', action);
   switch (action.type) {
     case EAction.CHOOSE:
       return {

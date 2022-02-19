@@ -17,7 +17,7 @@ type TAction = {
 export const initState: TState = { index: null, moved: false };
 
 export function reducer(state: TState, action: TAction): TState {
-  console.log(action);
+  console.log('ActiveDotReducer', action);
   switch(action.type) {
     case EAction.INIT:
       return initState;

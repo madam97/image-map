@@ -1,12 +1,16 @@
-import { IObject } from '../../../interfaces/MainInterfaces';
+type TCoord = {
+  x: number,
+  y: number
+};
 
 export enum EAction {
   ADD = 'ADD',
   CHANGE = 'CHANGE',
-  REMOVE = 'REMOVE'
+  REMOVE = 'REMOVE',
+  EMPTY = 'EMPTY'
 };
 
-type TState = IObject[];
+type TState = TCoord[];
 
 type TAction = {
   type: EAction,
@@ -15,7 +19,7 @@ type TAction = {
 };
 
 export function reducer(state: TState, action: TAction): TState {
-  console.log('ShapesReducer', action);
+  console.log('DotReducer', action);
   switch(action.type) {
     case EAction.ADD:
       return [...state, action.payload];
@@ -27,7 +31,10 @@ export function reducer(state: TState, action: TAction): TState {
       return state;
       break;
     case EAction.REMOVE:
-      return state.filter((shape, index) => index !== action.index);
+      return state.filter((dot, index) => index !== action.index);
+      break;
+    case EAction.EMPTY:
+      return [];
       break;
     default:
       return state;
