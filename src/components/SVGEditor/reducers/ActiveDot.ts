@@ -1,11 +1,11 @@
 export enum EAction {
-  INIT = 'INIT',
-  CHOOSE = 'CHOOSE',
+  DESELECT = 'DESELECT',
+  SELECT = 'SELECT',
   MOVE = 'MOVE'
 };
 
 type TState = {
-  index: number | null,
+  key: number | null,
   moved: boolean
 };
 
@@ -14,15 +14,15 @@ type TAction = {
   payload?: any
 };
 
-export const initState: TState = { index: null, moved: false };
+export const initState: TState = { key: null, moved: false };
 
 export function reducer(state: TState, action: TAction): TState {
-  console.log('ActiveDotReducer', action);
+  //console.log('ActiveDotReducer', action);
   switch(action.type) {
-    case EAction.INIT:
+    case EAction.DESELECT:
       return initState;
-    case EAction.CHOOSE:
-      return { ...initState, index: action.payload };
+    case EAction.SELECT:
+      return { ...initState, key: action.payload };
     case EAction.MOVE:
       return { ...state, moved: true };
   }

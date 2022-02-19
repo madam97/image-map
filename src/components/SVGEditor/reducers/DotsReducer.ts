@@ -20,7 +20,7 @@ type TAction = {
 export const initState: MapArray<TCoord> = new MapArray();
 
 export function reducer(state: TState, action: TAction): TState {
-  console.log('DotReducer', action);
+  //console.log('DotReducer', action);
 
   const newState = new MapArray(action.type === EAction.SET ? initState : state);
 

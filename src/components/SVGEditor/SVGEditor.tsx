@@ -68,7 +68,8 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * @param event 
    */
   const handleCanvasClick = (event: React.MouseEvent<SVGElement>): void => {
-    if (activeDot.index === null) {
+    if (activeDot.key === null) {
+      console.log('handleCanvasClick');
       const { top, left } = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - left;
       const y = event.clientY - top;
@@ -92,12 +93,13 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * @param event 
    */
   const handleCanvasMouseMove = (event: React.MouseEvent<SVGElement>): void => {
-    if (activeDot.index !== null) {
+    if (activeDot.key !== null) {
+      console.log('handleCanvasMouseMove');
       const { top, left } = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - left;
       const y = event.clientY - top;
 
-      dispatchDots({ type: EDotsAction.CHANGE, key: activeDot.index, payload: {x,y} });
+      dispatchDots({ type: EDotsAction.CHANGE, key: activeDot.key, payload: {x,y} });
       dispatchActiveDot({ type: EActiveDotAction.MOVE });
     }
   }
@@ -236,24 +238,28 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   const handleDotMouseDown = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
-    const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
-    dispatchActiveDot({ type: EActiveDotAction.CHOOSE, payload: index });
+    console.log('handleDotMouseDown');
+
+    const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+    dispatchActiveDot({ type: EActiveDotAction.SELECT, payload: dotKey });
   }
 
   /**
    * Deselects the active dot on the canvas
    * @param event 
    */
-  const handleDotMouseUp = (event: React.MouseEvent<SVGCircleElement>): void => {
+  const handleDotClick = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
-    const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+    console.log('handleDotClick');
 
-    if (activeDot.index !== null && index === activeDot.index) {
+    const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+
+    if (activeDot.key !== null && dotKey === activeDot.key) {
       if (!activeDot.moved) {
-        dispatchDots({ type: EDotsAction.REMOVE, key: activeDot.index });
+        dispatchDots({ type: EDotsAction.REMOVE, key: activeDot.key });
       }
-      dispatchActiveDot({ type: EActiveDotAction.INIT });
+      dispatchActiveDot({ type: EActiveDotAction.DESELECT });
     }
   }
 
@@ -270,8 +276,8 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       x: dot.x,
       y: dot.y,
       r: 3,
-      handleMouseDown: handleDotMouseDown,
-      handleMouseUp: handleDotMouseUp
+      handleClick: handleDotClick,
+      handleMouseDown: handleDotMouseDown
     };
 
     return (<Circle key={id} {...props} />);

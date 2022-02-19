@@ -15,7 +15,7 @@ type TAction = {
 };
 
 export function reducer(state: TState, action: TAction): TState {
-  console.log('ShapesReducer', action);
+  //console.log('ShapesReducer', action);
   switch(action.type) {
     case EAction.ADD:
       return [...state, action.payload];
