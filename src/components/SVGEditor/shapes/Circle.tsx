@@ -19,9 +19,9 @@ export default function Circle({ id, className, x, y, r, handleClick, handleMous
     <circle 
       id={id} className={getClass(className)} 
       cx={x} cy={y} r={r} 
-      onClick={(event) => {if (handleClick) handleClick(event)}}
-      onMouseDown={(event) => {if (handleMouseDown) handleMouseDown(event)}}
-      onMouseUp={(event) => {if (handleMouseUp) handleMouseUp(event)}}
+      onClick={event => {if (handleClick) handleClick(event)}}
+      onMouseDown={event => {if (handleMouseDown) handleMouseDown(event)}}
+      onMouseUp={event => {if (handleMouseUp) handleMouseUp(event)}}
     />
   );
 };
