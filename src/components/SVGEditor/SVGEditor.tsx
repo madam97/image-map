@@ -69,7 +69,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    */
   const handleCanvasClick = (event: React.MouseEvent<SVGElement>): void => {
     if (activeDot.key === null) {
-      console.log('handleCanvasClick');
       const { top, left } = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - left;
       const y = event.clientY - top;
@@ -94,7 +93,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    */
   const handleCanvasMouseMove = (event: React.MouseEvent<SVGElement>): void => {
     if (activeDot.key !== null) {
-      console.log('handleCanvasMouseMove');
       const { top, left } = event.currentTarget.getBoundingClientRect();
       const x = event.clientX - left;
       const y = event.clientY - top;
@@ -238,8 +236,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   const handleDotMouseDown = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
-    console.log('handleDotMouseDown');
-
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
     dispatchActiveDot({ type: EActiveDotAction.SELECT, payload: dotKey });
   }
@@ -250,8 +246,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    */
   const handleDotClick = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
-
-    console.log('handleDotClick');
 
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
 
