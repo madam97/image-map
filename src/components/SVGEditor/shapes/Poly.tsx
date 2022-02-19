@@ -1,10 +1,11 @@
+import { MapArray } from '../../../functions';
 import { getClass } from '../functions';
 import { TCoord } from './Dot';
 
 type PolyProps = {
   id: string,
   className: string,
-  points: TCoord[],
+  points: MapArray<TCoord>,
   handleClick?: (event: React.MouseEvent<SVGPolygonElement>) => void,
 };
 

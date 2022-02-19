@@ -1,3 +1,4 @@
+import { MapArray } from '../../../functions';
 import { TCoord } from '../shapes/Dot';
 
 export enum EAction {
@@ -8,31 +9,40 @@ export enum EAction {
   EMPTY = 'EMPTY'
 };
 
-type TState = TCoord[];
+type TState = MapArray<TCoord>;
 
 type TAction = {
   type: EAction,
-  index?: number,
+  key?: number,
   payload?: any
 };
 
+export const initState: MapArray<TCoord> = new MapArray();
+
 export function reducer(state: TState, action: TAction): TState {
   console.log('DotReducer', action);
+
+  const newState = new MapArray(action.type === EAction.SET ? initState : state);
+
   switch(action.type) {
     case EAction.SET:
-      return action.payload;
+      newState.fill(action.payload);
+      return newState;
     case EAction.EMPTY:
-      return [];
+      return new MapArray(initState);
     case EAction.ADD:
-      return [...state, action.payload];
+      newState.setNext(action.payload);
+      return newState;
     case EAction.CHANGE:
-      const newState = state.slice();
-      if (action.index !== undefined) {
-        newState[action.index] = action.payload;
+      if (action.key !== undefined) {
+        newState.set(action.key, action.payload);
       }
       return newState;
     case EAction.REMOVE:
-      return state.filter((dot, index) => index !== action.index);
+      if (action.key !== undefined) {
+        newState.delete(action.key);
+      }
+      return newState;
     default:
       return state;
   }

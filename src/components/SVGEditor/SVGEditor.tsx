@@ -5,7 +5,7 @@ import Rect from './shapes/Rect';
 import { initState as activeShapeInitState, reducer as activeShapeReducer, EAction as EActiveShapeAction } from './reducers/ActiveShapeReducer';
 import { initState as activeDotInitState, reducer as activeDotReducer, EAction as EActiveDotAction } from './reducers/ActiveDot';
 import { reducer as shapesReducer, EAction as EShapesAction } from './reducers/ShapesReducer';
-import { reducer as dotsReducer, EAction as EDotsAction } from './reducers/DotsReducer';
+import { initState as dotsInitState, reducer as dotsReducer, EAction as EDotsAction } from './reducers/DotsReducer';
 import '../../scss/components/SVGEditor.scss';
 import { IObject } from '../../interfaces/MainInterfaces';
 import Poly from './shapes/Poly';
@@ -20,7 +20,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   const [activeShape, dispatchActiveShape] = useReducer(activeShapeReducer, activeShapeInitState);
   const [activeDot, dispatchActiveDot] = useReducer(activeDotReducer, activeDotInitState);
   const [shapes, dispatchShapes] = useReducer(shapesReducer, []);
-  const [dots, dispatchDots] = useReducer(dotsReducer, []);
+  const [dots, dispatchDots] = useReducer(dotsReducer, dotsInitState);
 
   /**
    * Add, change or remove the active shape using the dots
@@ -28,30 +28,33 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   useEffect(() => {
     switch (activeShape.type) {
       case 'rect':
-        if (dots.length === 2) {
-          const x = Math.min(dots[0].x, dots[1].x);
-          const y = Math.min(dots[0].y, dots[1].y);
-          const width = Math.max(dots[0].x, dots[1].x) - x;
-          const height = Math.max(dots[0].y, dots[1].y) - y;
-
-          setShape({ x, y, width, height });
-        } else {
-          removeActiveShape();
-        }
-        break;
       case 'circle':
-        if (dots.length === 2) {
-          const x = dots[0].x;
-          const y = dots[0].y;
-          const r = Math.sqrt( Math.pow(Math.abs(dots[0].x - dots[1].x), 2) + Math.pow(Math.abs(dots[0].y - dots[1].y), 2) );
+        const dot1 = dots.getIndex(0);
+        const dot2 = dots.getIndex(1);
+        if (dot1 && dot2) {
+          let props: IObject;
+          if (activeShape.type === 'rect') {
+            const x = Math.min(dot1.x, dot2.x);
+            const y = Math.min(dot1.y, dot2.y);
+            const width = Math.max(dot1.x, dot2.x) - x;
+            const height = Math.max(dot1.y, dot2.y) - y;
+  
+            props = { x, y, width, height };
+          } else {
+            const x = dot1.x;
+            const y = dot1.y;
+            const r = Math.sqrt( Math.pow(Math.abs(dot1.x - dot2.x), 2) + Math.pow(Math.abs(dot1.y - dot2.y), 2) );
+  
+            props = { x, y, r };
+          }
 
-          setShape({ x, y, r });
+          setShape(props);
         } else {
           removeActiveShape();
         }
         break;
       case 'poly':
-        if (dots.length > 1) {
+        if (dots.size > 1) {
           setShape({ points: dots });
         } else {
           removeActiveShape();
@@ -73,7 +76,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       switch (activeShape.type) {
         case 'rect':
         case 'circle':
-          if (dots.length < 2) {
+          if (dots.size < 2) {
             dispatchDots({ type: EDotsAction.ADD, payload: {x,y} });
           }
           break;
@@ -94,7 +97,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       const x = event.clientX - left;
       const y = event.clientY - top;
 
-      dispatchDots({ type: EDotsAction.CHANGE, index: activeDot.index, payload: {x,y} });
+      dispatchDots({ type: EDotsAction.CHANGE, key: activeDot.index, payload: {x,y} });
       dispatchActiveDot({ type: EActiveDotAction.MOVE });
     }
   }
@@ -131,8 +134,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
 
     if (!event.currentTarget.classList.contains('active') && shapes[index]) {
-      console.log(index, shapes[index]);
-
       dispatchActiveShape({ type: EActiveShapeAction.SET, payload: { index, type: shapes[index].type } });
       dispatchDots({ type: EDotsAction.SET, payload: shapes[index].dots });
     }
@@ -247,11 +248,10 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     event.stopPropagation();
 
     const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
-    console.log('ACTIVE DOT END', activeDot.index);
 
     if (activeDot.index !== null && index === activeDot.index) {
       if (!activeDot.moved) {
-        dispatchDots({ type: EDotsAction.REMOVE, index: activeDot.index });
+        dispatchDots({ type: EDotsAction.REMOVE, key: activeDot.index });
       }
       dispatchActiveDot({ type: EActiveDotAction.INIT });
     }
@@ -261,8 +261,8 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
   // -----------------------------------------------------------
 
-  const drawnDots = dots.map((dot,index): JSX.Element => {
-    const id = getId(`dot-${index}`);
+  const drawnDots = dots.map((dot,key) => {
+    const id = getId(`dot-${key}`);
 
     const props = {
       id: id,
