@@ -1,11 +1,12 @@
 export enum EAction {
+  SET = 'SET',
   CHOOSE = 'CHOOSE',
   SET_TYPE = 'SET_TYPE'
 };
 
 type TState = {
   index: number | null,
-  type: 'rect' | 'circle'
+  type: 'rect' | 'circle' | 'poly'
 };
 
 type TAction = {
@@ -18,6 +19,11 @@ export const initState: TState = { index: null, type: 'rect' };
 export function reducer(state: TState, action: TAction): TState {
   console.log('ActiveShapeReducer', action);
   switch (action.type) {
+    case EAction.SET:
+      return {
+        ...state,
+        ...action.payload
+      };
     case EAction.CHOOSE:
       return {
         ...state,

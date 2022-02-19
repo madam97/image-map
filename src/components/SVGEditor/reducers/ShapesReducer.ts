@@ -20,10 +20,11 @@ export function reducer(state: TState, action: TAction): TState {
     case EAction.ADD:
       return [...state, action.payload];
     case EAction.CHANGE:
+      const newState = state.slice();
       if (action.index !== undefined) {
-        state[action.index] = action.payload;
+        newState[action.index] = action.payload;
       }
-      return state;
+      return newState;
     case EAction.REMOVE:
       return state.filter((shape, index) => index !== action.index);
     default:
