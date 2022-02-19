@@ -23,21 +23,16 @@ export function reducer(state: TState, action: TAction): TState {
   switch(action.type) {
     case EAction.ADD:
       return [...state, action.payload];
-      break;
     case EAction.CHANGE:
       if (action.index !== undefined) {
         state[action.index] = action.payload;
       }
       return state;
-      break;
     case EAction.REMOVE:
       return state.filter((dot, index) => index !== action.index);
-      break;
     case EAction.EMPTY:
       return [];
-      break;
     default:
       return state;
-      break;
   }
 };

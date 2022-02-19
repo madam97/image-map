@@ -23,15 +23,12 @@ export function reducer(state: TState, action: TAction): TState {
         ...state,
         index: action.payload
       };
-      break;
     case EAction.SET_TYPE:
       return {
         ...state,
         type: action.payload
       };
-      break;
     default:
       return state;
-      break;
   }
 };

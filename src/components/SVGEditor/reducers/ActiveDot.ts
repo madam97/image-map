@@ -21,12 +21,9 @@ export function reducer(state: TState, action: TAction): TState {
   switch(action.type) {
     case EAction.INIT:
       return initState;
-      break;
     case EAction.CHOOSE:
       return { ...initState, index: action.payload };
-      break;
     case EAction.MOVE:
       return { ...state, moved: true };
-      break;
   }
 }
