@@ -17,7 +17,6 @@
     fill: fade-out($gray-ee, 0.5);
 
     &.active {
-      cursor: default;
       stroke: $gray-70;
       stroke-width: 1;
     }
