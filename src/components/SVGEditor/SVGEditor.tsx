@@ -117,10 +117,10 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       dots
     }
 
-    if (activeShape.index !== null) {
-      dispatchShapes({ type: EShapesAction.CHANGE, index: activeShape.index, payload: shape });
+    if (activeShape.key !== null) {
+      dispatchShapes({ type: EShapesAction.CHANGE, index: activeShape.key, payload: shape });
     } else {
-      dispatchActiveShape({ type: EActiveShapeAction.CHOOSE, payload: shapes.length });
+      dispatchActiveShape({ type: EActiveShapeAction.SELECT, payload: shapes.length });
       dispatchShapes({ type: EShapesAction.ADD, payload: shape });
     }
   }
@@ -129,13 +129,27 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * Selects a shape, sets it to be the active shape and shows its dots
    */
   const selectActiveShape = (event: React.MouseEvent<SVGRectElement | SVGCircleElement | SVGPolygonElement>): void => {
-    event.stopPropagation();
+    if (activeShape.key === null) {
+      event.stopPropagation();
 
-    const index = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+      const shapeKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+  
+      if (!event.currentTarget.classList.contains('active') && shapes[shapeKey]) {
+        dispatchActiveShape({ type: EActiveShapeAction.SET, payload: { key: shapeKey, type: shapes[shapeKey].type } });
+        dispatchDots({ type: EDotsAction.SET, payload: shapes[shapeKey].dots });
+      }
+    }
+  }
 
-    if (!event.currentTarget.classList.contains('active') && shapes[index]) {
-      dispatchActiveShape({ type: EActiveShapeAction.SET, payload: { index, type: shapes[index].type } });
-      dispatchDots({ type: EDotsAction.SET, payload: shapes[index].dots });
+  /**
+   * Deselects the active shape and hides its dots
+   */
+  const deselectActiveShape = (event: React.MouseEvent<SVGElement>): void => {
+    event.preventDefault();
+
+    if (activeShape.key !== null) {
+      dispatchActiveShape({ type: EActiveShapeAction.DESELECT });
+      dispatchDots({ type: EDotsAction.EMPTY });
     }
   }
 
@@ -143,7 +157,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * Sets the editor to add a new element
    */
   const addNewActiveShape = (): void => {
-    dispatchActiveShape({ type: EActiveShapeAction.CHOOSE, payload: null });
+    dispatchActiveShape({ type: EActiveShapeAction.DESELECT });
     dispatchDots({ type: EDotsAction.EMPTY });
   }
 
@@ -152,10 +166,10 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * @params removeDots
    */
   const removeActiveShape = (removeDots: boolean = false): void => {
-    if (activeShape.index !== null) {
-      dispatchShapes({ type: EShapesAction.REMOVE, index: activeShape.index });
+    if (activeShape.key !== null) {
+      dispatchShapes({ type: EShapesAction.REMOVE, index: activeShape.key });
     }
-    dispatchActiveShape({ type: EActiveShapeAction.CHOOSE, payload: null });
+    dispatchActiveShape({ type: EActiveShapeAction.DESELECT });
 
     if (removeDots) {
       dispatchDots({ type: EDotsAction.EMPTY });
@@ -167,7 +181,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * @param type
    */
   const setActiveShapeType = (type: string): void => {
-    if (activeShape.index !== null) {
+    if (activeShape.key !== null) {
       removeActiveShape(true);
     }
     dispatchActiveShape({ type: EActiveShapeAction.SET_TYPE, payload: type });
@@ -183,7 +197,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
     const props = {
       id: id,
-      className: `shape ${activeShape.index === index ? 'active' : ''}`,
+      className: `shape ${activeShape.key === index ? 'active' : ''}`,
       handleClick: selectActiveShape
     };
       
@@ -278,12 +292,12 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   });
 
   const drawnShapes = shapes.map((shape, index): JSX.Element | void => {
-    if (activeShape.index !== index) {
+    if (activeShape.key !== index) {
       return drawShape(index, shape);
     }
   });
-  if (activeShape.index !== null && shapes[activeShape.index]) {
-    drawnShapes.push( drawShape(activeShape.index, shapes[activeShape.index]) );
+  if (activeShape.key !== null && shapes[activeShape.key]) {
+    drawnShapes.push( drawShape(activeShape.key, shapes[activeShape.key]) );
   }
 
   return (
@@ -294,6 +308,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
         height={height}
         onClick={event => handleCanvasClick(event)}
         onMouseMove={event => handleCanvasMouseMove(event)}
+        onContextMenu={event => deselectActiveShape(event)}
       >
         {drawnShapes}
         {drawnDots}
@@ -301,7 +316,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
       <div>
         <button onClick={event => { event.preventDefault(); addNewActiveShape();}}>Add new</button>
-        {activeShape.index !== null && <button onClick={event => { event.preventDefault(); removeActiveShape(true);}}>Remove selected</button>}
+        {activeShape.key !== null && <button onClick={event => { event.preventDefault(); removeActiveShape(true);}}>Remove selected</button>}
 
         <select value={activeShape.type} onChange={event => { event.preventDefault(); setActiveShapeType(event.currentTarget.value);}}>
           <option value="rect">Rectangle</option>

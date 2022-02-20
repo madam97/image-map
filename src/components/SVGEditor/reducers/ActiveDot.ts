@@ -1,6 +1,6 @@
 export enum EAction {
-  DESELECT = 'DESELECT',
   SELECT = 'SELECT',
+  DESELECT = 'DESELECT',
   MOVE = 'MOVE'
 };
 
