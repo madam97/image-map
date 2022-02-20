@@ -1,8 +1,7 @@
 export enum EAction {
   SET = 'SET',
   SELECT = 'SELECT',
-  DESELECT = 'DESELECT',
-  SET_TYPE = 'SET_TYPE'
+  DESELECT = 'DESELECT'
 };
 
 type TState = {
@@ -18,9 +17,17 @@ type TAction = {
 export const initState: TState = { key: null, type: 'rect' };
 
 export function reducer(state: TState, action: TAction): TState {
+
   //console.log('ActiveShapeReducer', action);
+
+  const getKey = (key: any): number | null => {
+    return typeof key === 'number' && key >= 0 ? key : null;
+  }
+
   switch (action.type) {
     case EAction.SET:
+      action.payload.key = getKey(action.payload.key);
+
       return {
         ...state,
         ...action.payload
@@ -28,17 +35,12 @@ export function reducer(state: TState, action: TAction): TState {
     case EAction.SELECT:
       return {
         ...state,
-        key: action.payload
+        key: getKey(action.payload)
       };
     case EAction.DESELECT:
       return {
         ...state,
         key: null
-      };
-    case EAction.SET_TYPE:
-      return {
-        ...state,
-        type: action.payload
       };
     default:
       return state;

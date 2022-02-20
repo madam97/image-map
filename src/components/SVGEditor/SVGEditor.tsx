@@ -154,10 +154,11 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   }
 
   /**
-   * Sets the editor to add a new element
+   * Add a new element of the given type, removes the dots if there are no active shape
+   * @param type
    */
-  const addNewActiveShape = (): void => {
-    dispatchActiveShape({ type: EActiveShapeAction.DESELECT });
+  const addNewActiveShape = (type: string): void => {
+    dispatchActiveShape({ type: EActiveShapeAction.SET, payload: { key: null, type } });
     dispatchDots({ type: EDotsAction.EMPTY });
   }
 
@@ -177,17 +178,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
   }
 
   /**
-   * Sets the active shape type and removes the active shape if it is not ready
-   * @param type
-   */
-  const setActiveShapeType = (type: string): void => {
-    if (activeShape.key !== null) {
-      removeActiveShape(true);
-    }
-    dispatchActiveShape({ type: EActiveShapeAction.SET_TYPE, payload: type });
-  }
-
-  /**
    * Draws the given shape
    * @param index
    * @param shape 
@@ -197,7 +187,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
     const props = {
       id: id,
-      className: `shape ${activeShape.key === index ? 'active' : ''}`,
+      className: `shape ${activeShape.key === index ? 'active cursor-default' : (activeShape.key !== null ? 'cursor-default' : '')}`,
       handleClick: selectActiveShape
     };
       
@@ -330,14 +320,14 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       </svg>
 
       <div>
-        <button onClick={event => { event.preventDefault(); addNewActiveShape();}}>Add new</button>
-        {activeShape.key !== null && <button onClick={event => { event.preventDefault(); removeActiveShape(true);}}>Remove selected</button>}
-
-        <select value={activeShape.type} onChange={event => { event.preventDefault(); setActiveShapeType(event.currentTarget.value);}}>
+        <select value={activeShape.type} onChange={event => { event.preventDefault(); addNewActiveShape(event.currentTarget.value);}}>
+          <option value="" disabled>Shape type</option>
           <option value="rect">Rectangle</option>
           <option value="circle">Circle</option>
           <option value="poly">Polygon</option>
         </select>
+
+        {activeShape.key !== null && <button onClick={event => { event.preventDefault(); removeActiveShape(true);}}>Remove selected</button>}
       </div>
     </>
   );
