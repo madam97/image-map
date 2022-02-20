@@ -288,17 +288,6 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
   return (
     <>
-      <div>
-        <button onClick={event => { event.preventDefault(); addNewActiveShape();}}>Add new</button>
-        {activeShape.index !== null && <button onClick={event => { event.preventDefault(); removeActiveShape(true);}}>Remove selected</button>}
-
-        <select value={activeShape.type} onChange={event => { event.preventDefault(); setActiveShapeType(event.currentTarget.value);}}>
-          <option value="rect">Rectangle</option>
-          <option value="circle">Circle</option>
-          <option value="poly">Polygon</option>
-        </select>
-      </div>
-
       <svg
         className={getClass('canvas')}
         width={width}
@@ -309,6 +298,17 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
         {drawnShapes}
         {drawnDots}
       </svg>
+
+      <div>
+        <button onClick={event => { event.preventDefault(); addNewActiveShape();}}>Add new</button>
+        {activeShape.index !== null && <button onClick={event => { event.preventDefault(); removeActiveShape(true);}}>Remove selected</button>}
+
+        <select value={activeShape.type} onChange={event => { event.preventDefault(); setActiveShapeType(event.currentTarget.value);}}>
+          <option value="rect">Rectangle</option>
+          <option value="circle">Circle</option>
+          <option value="poly">Polygon</option>
+        </select>
+      </div>
     </>
   );
 };

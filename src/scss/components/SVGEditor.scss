@@ -7,14 +7,14 @@
 
   &dot {
     cursor: pointer;
-    fill: $gray-ee;
-    stroke: $gray-70;
+    fill: $magenta;
+    stroke: $black;
     stroke-width: 1;
   }
 
   &shape {
     cursor: pointer;
-    fill: $gray-ee;
+    fill: fade-out($gray-ee, 0.5);
 
     &.active {
       cursor: default;
