@@ -11,18 +11,27 @@ type TState = {
 
 type TAction = {
   type: EAction,
-  payload?: any
+  payload?: {
+    key?: number | null
+  }
 };
 
 export const initState: TState = { key: null, moved: false };
 
 export function reducer(state: TState, action: TAction): TState {
   //console.log('ActiveDotReducer', action);
+
+  if (!action.payload) {
+    action.payload = {};
+  }
+  
   switch(action.type) {
     case EAction.DESELECT:
       return initState;
+
     case EAction.SELECT:
-      return { ...initState, key: action.payload };
+      return { ...initState, key: action.payload.key !== undefined ? action.payload.key : null};
+
     case EAction.MOVE:
       return { ...state, moved: true };
   }

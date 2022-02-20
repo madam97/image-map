@@ -13,36 +13,52 @@ type TState = MapArray<TCoord>;
 
 type TAction = {
   type: EAction,
-  key?: number,
-  payload?: any
+  payload?: {
+    key?: number,
+    dot?: TCoord,
+    dots?: TCoord[]
+  }
 };
 
-export const initState: MapArray<TCoord> = new MapArray();
+export const initState: TState = new MapArray();
 
 export function reducer(state: TState, action: TAction): TState {
   //console.log('DotReducer', action);
+
+  if (!action.payload) {
+    action.payload = {};
+  }
 
   const newState = new MapArray(action.type === EAction.SET ? initState : state);
 
   switch(action.type) {
     case EAction.SET:
-      newState.fill(action.payload);
+      if (action.payload.dots) {
+        newState.fill(action.payload.dots);
+      }
       return newState;
+
     case EAction.EMPTY:
       return new MapArray(initState);
+
     case EAction.ADD:
-      newState.setNext(action.payload);
+      if (action.payload.dot) {
+        newState.setNext(action.payload.dot);
+      }
       return newState;
+
     case EAction.CHANGE:
-      if (action.key !== undefined) {
-        newState.set(action.key, action.payload);
+      if (action.payload.key !== undefined && action.payload.dot) {
+        newState.set(action.payload.key, action.payload.dot);
       }
       return newState;
+
     case EAction.REMOVE:
-      if (action.key !== undefined) {
-        newState.delete(action.key);
+      if (action.payload.key !== undefined) {
+        newState.delete(action.payload.key);
       }
       return newState;
+      
     default:
       return state;
   }

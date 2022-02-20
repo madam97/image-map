@@ -2,10 +2,10 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { getId, getClass } from './functions';
 import Circle from './shapes/Circle';
 import Rect from './shapes/Rect';
-import { initState as activeShapeInitState, reducer as activeShapeReducer, EAction as EActiveShapeAction } from './reducers/ActiveShape';
-import { initState as activeDotInitState, reducer as activeDotReducer, EAction as EActiveDotAction } from './reducers/ActiveDot';
-import { reducer as shapesReducer, EAction as EShapesAction } from './reducers/Shapes';
-import { initState as dotsInitState, reducer as dotsReducer, EAction as EDotsAction } from './reducers/Dots';
+import { initState as activeShapeInitState, reducer as activeShapeReducer, EAction as ActiveShapeAction } from './reducers/ActiveShape';
+import { initState as activeDotInitState, reducer as activeDotReducer, EAction as ActiveDotAction } from './reducers/ActiveDot';
+import { initState as shapesInitState, reducer as shapesReducer, EAction as ShapesAction } from './reducers/Shapes';
+import { initState as dotsInitState, reducer as dotsReducer, EAction as DotsAction } from './reducers/Dots';
 import '../../scss/components/SVGEditor.scss';
 import { IObject } from '../../interfaces/MainInterfaces';
 import Poly from './shapes/Poly';
@@ -19,7 +19,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
   const [activeShape, dispatchActiveShape] = useReducer(activeShapeReducer, activeShapeInitState);
   const [activeDot, dispatchActiveDot] = useReducer(activeDotReducer, activeDotInitState);
-  const [shapes, dispatchShapes] = useReducer(shapesReducer, []);
+  const [shapes, dispatchShapes] = useReducer(shapesReducer, shapesInitState);
   const [dots, dispatchDots] = useReducer(dotsReducer, dotsInitState);
 
   /**
@@ -77,11 +77,11 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
         case 'rect':
         case 'circle':
           if (dots.size < 2) {
-            dispatchDots({ type: EDotsAction.ADD, payload: {x,y} });
+            dispatchDots({ type: DotsAction.ADD, payload: {dot: {x,y}} });
           }
           break;
         case 'poly':
-          dispatchDots({ type: EDotsAction.ADD, payload: {x,y} });
+          dispatchDots({ type: DotsAction.ADD, payload: {dot: {x,y}} });
           break;
       }
     }
@@ -97,8 +97,8 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       const x = event.clientX - left;
       const y = event.clientY - top;
 
-      dispatchDots({ type: EDotsAction.CHANGE, key: activeDot.key, payload: {x,y} });
-      dispatchActiveDot({ type: EActiveDotAction.MOVE });
+      dispatchDots({ type: DotsAction.CHANGE, payload: {key: activeDot.key, dot: {x,y}} });
+      dispatchActiveDot({ type: ActiveDotAction.MOVE });
     }
   }
 
@@ -118,10 +118,10 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     }
 
     if (activeShape.key !== null) {
-      dispatchShapes({ type: EShapesAction.CHANGE, index: activeShape.key, payload: shape });
+      dispatchShapes({ type: ShapesAction.CHANGE, payload: {key: activeShape.key, shape} });
     } else {
-      dispatchActiveShape({ type: EActiveShapeAction.SELECT, payload: shapes.length });
-      dispatchShapes({ type: EShapesAction.ADD, payload: shape });
+      dispatchShapes({ type: ShapesAction.ADD, payload: {shape} });
+      dispatchActiveShape({ type: ActiveShapeAction.SELECT, payload: {key: shapes.keyNext()} });
     }
   }
 
@@ -133,10 +133,11 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       event.stopPropagation();
 
       const shapeKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+      const shape = shapes.get(shapeKey);
   
-      if (!event.currentTarget.classList.contains('active') && shapes[shapeKey]) {
-        dispatchActiveShape({ type: EActiveShapeAction.SET, payload: { key: shapeKey, type: shapes[shapeKey].type } });
-        dispatchDots({ type: EDotsAction.SET, payload: shapes[shapeKey].dots });
+      if (!event.currentTarget.classList.contains('active') && shape) {
+        dispatchActiveShape({ type: ActiveShapeAction.SET, payload: { key: shapeKey, type: shape.type } });
+        dispatchDots({ type: DotsAction.SET, payload: {dots: shape.dots} });
       }
     }
   }
@@ -148,8 +149,8 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     event.preventDefault();
 
     if (activeShape.key !== null) {
-      dispatchActiveShape({ type: EActiveShapeAction.DESELECT });
-      dispatchDots({ type: EDotsAction.EMPTY });
+      dispatchActiveShape({ type: ActiveShapeAction.DESELECT });
+      dispatchDots({ type: DotsAction.EMPTY });
     }
   }
 
@@ -158,8 +159,8 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * @param type
    */
   const addNewActiveShape = (type: string): void => {
-    dispatchActiveShape({ type: EActiveShapeAction.SET, payload: { key: null, type } });
-    dispatchDots({ type: EDotsAction.EMPTY });
+    dispatchActiveShape({ type: ActiveShapeAction.SET, payload: { key: null, type } });
+    dispatchDots({ type: DotsAction.EMPTY });
   }
 
   /**
@@ -168,12 +169,12 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    */
   const removeActiveShape = (removeDots: boolean = false): void => {
     if (activeShape.key !== null) {
-      dispatchShapes({ type: EShapesAction.REMOVE, index: activeShape.key });
+      dispatchShapes({ type: ShapesAction.REMOVE, payload: {key: activeShape.key} });
+      dispatchActiveShape({ type: ActiveShapeAction.DESELECT });
     }
-    dispatchActiveShape({ type: EActiveShapeAction.DESELECT });
 
     if (removeDots) {
-      dispatchDots({ type: EDotsAction.EMPTY });
+      dispatchDots({ type: DotsAction.EMPTY });
     }
   }
 
@@ -241,7 +242,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     event.stopPropagation();
 
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
-    dispatchActiveDot({ type: EActiveDotAction.SELECT, payload: dotKey });
+    dispatchActiveDot({ type: ActiveDotAction.SELECT, payload: {key: dotKey} });
   }
 
   /**
@@ -254,7 +255,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
 
     if (activeDot.key !== null && dotKey === activeDot.key) {
-      dispatchActiveDot({ type: EActiveDotAction.DESELECT });
+      dispatchActiveDot({ type: ActiveDotAction.DESELECT });
     }
   }
 
@@ -268,10 +269,10 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
 
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
 
-    dispatchDots({ type: EDotsAction.REMOVE, key: dotKey });
+    dispatchDots({ type: DotsAction.REMOVE, payload: {key: dotKey} });
 
     if (dotKey === activeDot.key) {
-      dispatchActiveDot({ type: EActiveDotAction.DESELECT });
+      dispatchActiveDot({ type: ActiveDotAction.DESELECT });
     }
   }
 
@@ -301,8 +302,11 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       return drawShape(index, shape);
     }
   });
-  if (activeShape.key !== null && shapes[activeShape.key]) {
-    drawnShapes.push( drawShape(activeShape.key, shapes[activeShape.key]) );
+  if (activeShape.key !== null) {
+    const shape = shapes.get(activeShape.key);
+    if (shape !== undefined) {
+      drawnShapes.push( drawShape(activeShape.key, shape) );
+    }
   }
 
   return (

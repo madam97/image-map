@@ -1,3 +1,4 @@
+import { MapArray } from '../../../functions';
 import { IObject } from '../../../interfaces/MainInterfaces';
 
 export enum EAction {
@@ -6,27 +7,42 @@ export enum EAction {
   REMOVE = 'REMOVE'
 };
 
-type TState = IObject[];
+type TState = MapArray<IObject>;
 
 type TAction = {
   type: EAction,
-  index?: number,
-  payload?: any
+  payload: {
+    key?: number,
+    shape?: IObject
+  }
 };
+
+export const initState: TState = new MapArray();
 
 export function reducer(state: TState, action: TAction): TState {
   //console.log('ShapesReducer', action);
+  
+  const newState = new MapArray(state);
+
   switch(action.type) {
     case EAction.ADD:
-      return [...state, action.payload];
-    case EAction.CHANGE:
-      const newState = state.slice();
-      if (action.index !== undefined) {
-        newState[action.index] = action.payload;
+      if (action.payload.shape) {
+        newState.setNext(action.payload.shape);
       }
       return newState;
+
+    case EAction.CHANGE:
+      if (action.payload.key !== undefined && action.payload.shape) {
+        newState.set(action.payload.key, action.payload.shape);
+      }
+      return newState;
+
     case EAction.REMOVE:
-      return state.filter((shape, index) => index !== action.index);
+      if (action.payload.key !== undefined) {
+        newState.delete(action.payload.key);
+      }
+      return newState;
+
     default:
       return state;
   }
