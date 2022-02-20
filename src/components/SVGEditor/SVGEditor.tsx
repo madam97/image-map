@@ -247,7 +247,7 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * Selects the active dot on the canvas
    * @param event 
    */
-  const handleDotMouseDown = (event: React.MouseEvent<SVGCircleElement>): void => {
+  const selectActiveDot = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
@@ -258,15 +258,29 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
    * Deselects the active dot on the canvas
    * @param event 
    */
-  const handleDotClick = (event: React.MouseEvent<SVGCircleElement>): void => {
+  const deselectActiveDot = (event: React.MouseEvent<SVGCircleElement>): void => {
     event.stopPropagation();
 
     const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
 
     if (activeDot.key !== null && dotKey === activeDot.key) {
-      if (!activeDot.moved) {
-        dispatchDots({ type: EDotsAction.REMOVE, key: activeDot.key });
-      }
+      dispatchActiveDot({ type: EActiveDotAction.DESELECT });
+    }
+  }
+
+  /**
+   * Removes the given dot, deselects it if it is the active dot
+   * @param event 
+   */
+  const removeDot = (event: React.MouseEvent<SVGCircleElement>): void => {
+    event.preventDefault();
+    event.stopPropagation(); 
+
+    const dotKey = parseInt(event.currentTarget.id.replace(/^\D+/g, ''));
+
+    dispatchDots({ type: EDotsAction.REMOVE, key: dotKey });
+
+    if (dotKey === activeDot.key) {
       dispatchActiveDot({ type: EActiveDotAction.DESELECT });
     }
   }
@@ -284,8 +298,9 @@ export default function SVGEditor({ width, height }: SVGEditorProps): JSX.Elemen
       x: dot.x,
       y: dot.y,
       r: 3,
-      handleClick: handleDotClick,
-      handleMouseDown: handleDotMouseDown
+      handleClick: deselectActiveDot,
+      handleContextMenu: removeDot,
+      handleMouseDown: selectActiveDot
     };
 
     return (<Circle key={id} {...props} />);
